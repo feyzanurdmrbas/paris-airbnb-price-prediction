@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import joblib
+from pathlib import Path
 
 st.set_page_config(page_title="Paris Airbnb | Gecelik Fiyat Tahmini", page_icon="🏠", layout="wide", initial_sidebar_state="expanded")
 
@@ -225,6 +227,119 @@ elif page=="06 · Bulgular":
     st.image("images/feature_importance.png",use_container_width=True)
     st.markdown('<div class="insight"><b>Özellik önemleri yorumu:</b><br/>Maksimum misafir kapasitesi, minimum konaklama süresi ve yatak odası sayısı final modelde en önemli değişkenler arasında. Enlem ve boylam gibi konum değişkenleri de üst sıralarda. Minimum konaklama süresinin basit korelasyonda negatif ilişki göstermesine rağmen model içinde yüksek önem alması, ilişkinin yalnızca doğrusal olmadığını ve diğer değişkenlerle etkileşim içinde değerlendirildiğini gösteriyor.</div>',unsafe_allow_html=True)
     st.markdown('<div class="warning"><b>Dikkat:</b> Random Forest feature importance nedensellik kanıtlamaz. Burada gördüğüm şey, modelin tahmin yaparken hangi değişkenlerden daha fazla yararlandığıdır.</div>',unsafe_allow_html=True)
+
+
+    st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+    st.markdown("### 🏠 Yeni Bir İlan İçin Fiyat Tahmini")
+    st.markdown(
+        '<div class="purple-note">Final Random Forest modelini kullanarak seçilen ilan özelliklerine göre tahmini gecelik fiyat hesaplanır.</div>',
+        unsafe_allow_html=True
+    )
+
+    prediction_bundle = load_prediction_bundle()
+
+    if prediction_bundle is not None:
+        dashboard_data = prediction_bundle.get("dashboard_data", pd.DataFrame())
+
+        if not dashboard_data.empty and "neighbourhood_cleansed" in dashboard_data.columns:
+            neighbourhoods = sorted(
+                dashboard_data["neighbourhood_cleansed"].dropna().astype(str).unique().tolist()
+            )
+        else:
+            neighbourhoods = [
+                "Buttes-Montmartre",
+                "Popincourt",
+                "Vaugirard",
+                "Batignolles-Monceau",
+                "Entrepôt",
+            ]
+
+        if not dashboard_data.empty and "room_type" in dashboard_data.columns:
+            room_types = sorted(
+                dashboard_data["room_type"].dropna().astype(str).unique().tolist()
+            )
+        else:
+            room_types = ["Entire home/apt", "Private room", "Hotel room", "Shared room"]
+
+        with st.form("price_prediction_form"):
+            p1, p2, p3 = st.columns(3)
+
+            with p1:
+                neighbourhood = st.selectbox("Mahalle / bölge", neighbourhoods)
+                room_type = st.selectbox("Oda tipi", room_types)
+                accommodates = st.slider("Maksimum misafir kapasitesi", 1, 16, 2)
+                bedrooms = st.number_input("Yatak odası sayısı", 0.0, 20.0, 1.0, 1.0)
+
+            with p2:
+                bathrooms = st.number_input("Banyo sayısı", 0.0, 20.0, 1.0, 0.5)
+                beds = st.number_input("Yatak sayısı", 0.0, 30.0, 1.0, 1.0)
+                minimum_nights = st.number_input("Minimum konaklama süresi", 1, 365, 2)
+                availability_365 = st.slider("Yıllık müsait gün sayısı", 0, 365, 180)
+
+            with p3:
+                number_of_reviews = st.number_input("Toplam yorum sayısı", 0, 5000, 30)
+                reviews_per_month = st.number_input("Aylık ortalama yorum", 0.0, 60.0, 1.0, 0.1)
+                review_scores_rating = st.number_input("Değerlendirme puanı", 0.0, 5.0, 4.7, 0.1)
+
+                if (
+                    not dashboard_data.empty
+                    and {"latitude", "longitude", "neighbourhood_cleansed"}.issubset(dashboard_data.columns)
+                ):
+                    loc = dashboard_data[
+                        dashboard_data["neighbourhood_cleansed"].astype(str) == str(neighbourhood)
+                    ]
+                    latitude = float(loc["latitude"].median()) if len(loc) else 48.8566
+                    longitude = float(loc["longitude"].median()) if len(loc) else 2.3522
+                else:
+                    latitude, longitude = 48.8566, 2.3522
+
+                st.caption(
+                    f"Konum koordinatları seçilen bölgenin tipik konumundan alınır: "
+                    f"{latitude:.4f}, {longitude:.4f}"
+                )
+
+            predict_clicked = st.form_submit_button("Tahmini Gecelik Fiyatı Hesapla")
+
+        if predict_clicked:
+            input_row = pd.DataFrame([{
+                "neighbourhood_cleansed": neighbourhood,
+                "latitude": latitude,
+                "longitude": longitude,
+                "room_type": room_type,
+                "accommodates": accommodates,
+                "bedrooms": bedrooms,
+                "bathrooms": bathrooms,
+                "beds": beds,
+                "number_of_reviews": number_of_reviews,
+                "reviews_per_month": reviews_per_month,
+                "review_scores_rating": review_scores_rating,
+                "minimum_nights": minimum_nights,
+                "availability_365": availability_365,
+            }])
+
+            predicted_price = predict_nightly_price(prediction_bundle, input_row)
+
+            st.markdown(
+                f"""
+                <div class="result-box" style="text-align:center;">
+                    <div class="card-label">TAHMİNİ GECELİK FİYAT</div>
+                    <div class="card-value" style="font-size:2.45rem;">€{predicted_price:,.0f}</div>
+                    <div class="card-note">Final Random Forest modeli</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            st.caption(
+                "Bu değer model tahminidir; gerçek piyasa fiyatı sezon, etkinlik tarihi ve "
+                "rezervasyon zamanı gibi modelde bulunmayan faktörlere göre değişebilir."
+            )
+    else:
+        st.info(
+            "Canlı tahmin aracı, final eğitilmiş model dosyası (`model_bundle.joblib`) "
+            "repo'ya eklendiğinde otomatik olarak aktif olacaktır."
+        )
+
 
 elif page=="07 · Sonuç":
     hero("FAZ 3 · SONUÇ","Sonuç ve Hipotezlerin Değerlendirilmesi","Son adımda başlangıçta kurduğum hipotezlere geri dönüp elde ettiğim bulguların bu beklentileri ne ölçüde desteklediğini değerlendiriyorum.")
