@@ -80,13 +80,11 @@ with st.sidebar:
         label_visibility="collapsed"
     )
     st.markdown("---")
-    st.caption("7 adımlı sunum akışı")
+    st.caption("7 adımlı proje akışı")
     st.caption("Veri → Analiz → Model → İyileştirme → Sonuç")
     st.markdown("---")
     st.caption("Feyza Nur Demirbaş · 2026")
 
-def tip(text):
-    st.markdown(f'<div class="presenter-tip"><b>💡 Sunum ipucu:</b> {text}</div>', unsafe_allow_html=True)
 
 def divider(label=None):
     if label:
@@ -103,7 +101,6 @@ if page=="01 · Proje & Veri":
     explain("Tahmin problemi","Paris'teki bir Airbnb ilanının gecelik fiyatını tahmin etmeye çalışıyorum. Fiyat sürekli sayısal bir değişken olduğu için problem regresyon olarak ele alındı.")
     explain("Neden tek bir değişken yeterli değil?","Aynı şehirdeki iki ilan; konum, oda tipi, maksimum misafir kapasitesi, yatak odası ve banyo sayısı, minimum konaklama süresi, yorum geçmişi ve müsaitlik gibi birçok özellik nedeniyle farklı fiyatlanabilir. Bu yüzden fiyatı tek bir değişkene bağlamak yerine değişkenleri birlikte değerlendirdim.")
     st.markdown('''<div class="hypothesis"><div class="h-title">Hipotez 1 · Kapasite ve fiziksel özellikler</div>Maksimum misafir kapasitesi, yatak odası, banyo ve yatak sayısı arttıkça gecelik fiyatın genel olarak yükselmesini bekledim.</div><div class="hypothesis"><div class="h-title">Hipotez 2 · Doğrusal olmayan yapı</div>Airbnb fiyatlarının yalnızca doğrusal ilişkilerle açıklanamayacağını; bu nedenle ağaç tabanlı modellerin doğrusal modellerden daha yüksek test başarısı gösterebileceğini düşündüm.</div><div class="hypothesis"><div class="h-title">Hipotez 3 · Overfitting kontrolü</div>Model karmaşıklığını sınırlandırıp çapraz doğrulama kullandığımda eğitim ve test performansı arasındaki farkın azaltılabileceğini öngördüm.</div>''',unsafe_allow_html=True)
-    st.markdown('<div class="purple-note"><b>Burada sonucu söylemiyorum.</b> Bunlar analize başlamadan önceki beklentilerim. Son bölümde bulgulara dönüp hangilerinin desteklendiğini değerlendireceğim.</div>',unsafe_allow_html=True)
 
     divider("VERİ SETİ")
     c1,c2,c3=st.columns(3)
@@ -114,7 +111,6 @@ if page=="01 · Proje & Veri":
     explain("Değişken seçimi","Projenin kapsamına uygun, yorumlanabilir ve fiyatla ilişkili olmasını beklediğim değişkenleri seçtim. Böylece hem modeli daha anlaşılır tuttum hem de gereksiz karmaşıklığı azalttım.")
     st.markdown("### Kullandığım temel değişkenler")
     st.dataframe(variables_df,use_container_width=True,hide_index=True)
-    st.markdown('<div class="insight"><b>Sunum dili:</b> Önce Türkçe anlamını söylüyorum; gerekirse parantez içinde teknik sütun adını gösteriyorum. Örneğin “maksimum misafir kapasitesi (<code>accommodates</code>)”.</div>',unsafe_allow_html=True)
 
 elif page=="02 · Veri Hazırlama":
     hero("FAZ 1 · VERİYİ ANLAMA","Veri Temizleme ve Eksik Değerler","Ham veriyi doğrudan modele vermek yerine önce hedef fiyatı kullanılabilir hale getirdim ve eksik değerlerin nerede yoğunlaştığını inceledim.")
@@ -200,7 +196,7 @@ elif page=="05 · Model İyileştirme":
     fig=go.Figure()
     fig.add_trace(go.Scatter(x=size_df["Kullanılan oran"],y=size_df["Train R²"],mode="lines+markers",name="Train R²",line=dict(color=SAGE_DARK,width=4),marker=dict(size=10)))
     fig.add_trace(go.Scatter(x=size_df["Kullanılan oran"],y=size_df["Test R²"],mode="lines+markers",name="Test R²",line=dict(color=LILAC_DARK,width=4),marker=dict(size=10)))
-    fig.update_layout(title=None,xaxis_title="Kullanılan eğitim verisi (%)",yaxis_title="R²",legend=dict(orientation="h",y=1.08))
+    fig.update_layout(title=dict(text=""),xaxis_title="Kullanılan eğitim verisi (%)",yaxis_title="R²",legend=dict(orientation="h",y=1.08))
     st.plotly_chart(transparent(fig,500),use_container_width=True)
     st.dataframe(size_df[["Eğitim verisi","Train R²","Test R²","Train-Test Farkı"]].style.format({"Train R²":"{:.4f}","Test R²":"{:.4f}","Train-Test Farkı":"{:.4f}"}),use_container_width=True,hide_index=True)
     st.markdown('<div class="insight"><b>Grafik yorumu:</b><br/>Eğitim verisinin yalnızca %10’unu kullandığımda Test R² yaklaşık 0,584’tü. Veri miktarını artırdıkça Test R² düzenli biçimde yükseldi ve %100 eğitim verisinde yaklaşık 0,631’e ulaştı. Train R² ise büyük ölçüde benzer seviyede kaldı. Bu nedenle daha az veri kullanmanın overfitting’i çözmediği; aksine daha fazla gözlemin genelleme performansına katkı sağladığı sonucuna vardım.</div>',unsafe_allow_html=True)
@@ -243,4 +239,4 @@ elif page=="07 · Sonuç":
     with c2:
         explain("Yeni model ailelerini karşılaştırma","XGBoost, CatBoost ve LightGBM gibi boosting modelleri Random Forest ile karşılaştırılabilir.")
         explain("Doğrulama yaklaşımını geliştirme","Nested cross-validation ve farklı veri kesitleri üzerinde dış doğrulama ile genelleme performansı daha kapsamlı test edilebilir.")
-    st.markdown('<div class="purple-note"><b>Sunumu kapatırken:</b> “Sonuç olarak, bu projede hedefim yalnızca yüksek bir skor üretmek değil; veri yapısını anlayarak, verdiğim preprocessing ve modelleme kararlarını gerekçelendirebildiğim ve yeni veriye daha sağlıklı genellenebilen bir fiyat tahmin süreci oluşturmaktı.”</div>',unsafe_allow_html=True)
+    st.markdown('<div class="purple-note"><b>Genel değerlendirme</b><br/>Bu projede hedefim yalnızca yüksek bir skor üretmek değil; veri yapısını anlayarak, preprocessing ve modelleme kararlarını gerekçelendirebildiğim ve yeni veriye daha sağlıklı genellenebilen bir fiyat tahmin süreci oluşturmaktı.</div>',unsafe_allow_html=True)
