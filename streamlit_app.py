@@ -35,6 +35,10 @@ h1,h2,h3 {{color:{INK};letter-spacing:-.025em;}}
 .h-title {{color:{INK};font-weight:850;margin-bottom:.42rem;}}
 .supported {{display:inline-block;background:rgba(120,151,129,.13);color:{SAGE_DARK};font-weight:850;padding:.26rem .55rem;border-radius:999px;margin-bottom:.46rem;}}
 .chip {{display:inline-block;background:rgba(80,109,89,.09);color:{SAGE_DARK};font-size:.77rem;font-weight:750;padding:.34rem .60rem;border-radius:999px;margin:.11rem .17rem .11rem 0;}}
+.presenter-tip {{background:rgba(255,255,255,.58);border:1px dashed rgba(157,137,180,.55);border-radius:13px;padding:.72rem .9rem;margin:.45rem 0 1rem;color:{MUTED};font-size:.88rem;line-height:1.5;}}
+.presenter-tip b {{color:{LILAC_DARK};}}
+.section-kicker {{font-size:.78rem;font-weight:850;letter-spacing:.08em;color:{SAGE_DARK};text-transform:uppercase;margin-top:.35rem;margin-bottom:.15rem;}}
+.section-divider {{height:1px;background:linear-gradient(90deg,rgba(120,151,129,.35),rgba(157,137,180,.22),rgba(200,168,107,0));margin:1.5rem 0 1.2rem;}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -64,15 +68,34 @@ with st.sidebar:
     st.markdown("### Gecelik Fiyat Tahmini")
     st.caption("Bireysel Veri Analitiği Bitirme Projesi")
     st.markdown("---")
-    page=st.radio("Sunum Bölümü",["1 · Projeye Giriş","2 · Veri Setini Tanıma","3 · Veri Temizleme","4 · Aykırı Değer Analizi","5 · Keşifsel Veri Analizi","6 · İstatistiksel Analiz","7 · Modelleme İçin Veri Hazırlama","8 · Modeller ve Değerlendirme","9 · Overfitting Analizi","10 · Eğitim Verisi Miktarı","11 · Random Forest Optimizasyonu","12 · Final Model ve Bulgular","13 · Sonuç ve Hipotezler"],label_visibility="collapsed")
+    page=st.radio(
+        "Sunum Bölümü",
+        [
+            "01 · Proje & Veri",
+            "02 · Veri Hazırlama",
+            "03 · Veri Analizi",
+            "04 · Modelleme",
+            "05 · Model İyileştirme",
+            "06 · Bulgular",
+            "07 · Sonuç",
+        ],
+        label_visibility="collapsed"
+    )
     st.markdown("---")
-    st.caption("FAZ 1 · Veriyi Anlama · 1–6")
-    st.caption("FAZ 2 · Model Geliştirme · 7–12")
-    st.caption("FAZ 3 · Sonuç · 13")
+    st.caption("7 adımlı sunum akışı")
+    st.caption("Veri → Analiz → Model → İyileştirme → Sonuç")
     st.markdown("---")
     st.caption("Feyza Nur Demirbaş · 2026")
 
-if page=="1 · Projeye Giriş":
+def tip(text):
+    st.markdown(f'<div class="presenter-tip"><b>💡 Sunum ipucu:</b> {text}</div>', unsafe_allow_html=True)
+
+def divider(label=None):
+    if label:
+        st.markdown(f'<div class="section-kicker">{label}</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+
+if page=="01 · Proje & Veri":
     hero("FAZ 1 · VERİYİ ANLAMA","Paris Airbnb İlanlarında Gecelik Fiyat Tahmini","Bu projede amacım yalnızca en yüksek model skorunu bulmak değildi. Paris Airbnb fiyatlarının hangi özelliklerle ilişkili olduğunu anlamak, aykırı değerleri kontrollü biçimde ele almak ve modelin eğitim verisini ezberlemesini önleyecek savunulabilir bir süreç kurmak istedim.")
     c1,c2,c3=st.columns(3)
     with c1: metric_card("Problem türü","Regresyon","Hedef değişken gecelik fiyat (€)")
@@ -83,9 +106,8 @@ if page=="1 · Projeye Giriş":
     explain("Neden tek bir değişken yeterli değil?","Aynı şehirdeki iki ilan; konum, oda tipi, maksimum misafir kapasitesi, yatak odası ve banyo sayısı, minimum konaklama süresi, yorum geçmişi ve müsaitlik gibi birçok özellik nedeniyle farklı fiyatlanabilir. Bu yüzden fiyatı tek bir değişkene bağlamak yerine değişkenleri birlikte değerlendirdim.")
     st.markdown('''<div class="hypothesis"><div class="h-title">Hipotez 1 · Kapasite ve fiziksel özellikler</div>Maksimum misafir kapasitesi, yatak odası, banyo ve yatak sayısı arttıkça gecelik fiyatın genel olarak yükselmesini bekledim.</div><div class="hypothesis"><div class="h-title">Hipotez 2 · Doğrusal olmayan yapı</div>Airbnb fiyatlarının yalnızca doğrusal ilişkilerle açıklanamayacağını; bu nedenle ağaç tabanlı modellerin doğrusal modellerden daha yüksek test başarısı gösterebileceğini düşündüm.</div><div class="hypothesis"><div class="h-title">Hipotez 3 · Overfitting kontrolü</div>Model karmaşıklığını sınırlandırıp çapraz doğrulama kullandığımda eğitim ve test performansı arasındaki farkın azaltılabileceğini öngördüm.</div>''',unsafe_allow_html=True)
     st.markdown('<div class="purple-note"><b>Burada sonucu söylemiyorum.</b> Bunlar analize başlamadan önceki beklentilerim. Son bölümde bulgulara dönüp hangilerinin desteklendiğini değerlendireceğim.</div>',unsafe_allow_html=True)
-
-elif page=="2 · Veri Setini Tanıma":
-    hero("FAZ 1 · VERİYİ ANLAMA","Veri Setini Tanıma","Model kurmadan önce verinin büyüklüğünü, hedef değişkeni ve hangi ilan özelliklerini kullanabileceğimi anlamaya odaklandım.")
+    tip("Açılışta üç şeyi net söyle: problem regresyon, hedef gecelik fiyat, amaç yalnızca skor değil; fiyatı etkileyen yapıyı anlayıp genellenebilir bir model kurmak.")
+    divider("VERİ SETİ")
     c1,c2,c3=st.columns(3)
     with c1: metric_card("Ham gözlem","77.679","Paris Airbnb ilanı")
     with c2: metric_card("Ham değişken","90","Veri setindeki sütun sayısı")
@@ -95,8 +117,9 @@ elif page=="2 · Veri Setini Tanıma":
     st.markdown("### Kullandığım temel değişkenler")
     st.dataframe(variables_df,use_container_width=True,hide_index=True)
     st.markdown('<div class="insight"><b>Sunum dili:</b> Önce Türkçe anlamını söylüyorum; gerekirse parantez içinde teknik sütun adını gösteriyorum. Örneğin “maksimum misafir kapasitesi (<code>accommodates</code>)”.</div>',unsafe_allow_html=True)
+    tip("77.679 ilan ve 90 değişkenle başladığını; fiyat temizliği sonrası 48.402 ilanın kaldığını söyle. Teknik sütun adlarını ancak hoca sorarsa kullan.")
 
-elif page=="3 · Veri Temizleme":
+elif page=="02 · Veri Hazırlama":
     hero("FAZ 1 · VERİYİ ANLAMA","Veri Temizleme ve Eksik Değerler","Ham veriyi doğrudan modele vermek yerine önce hedef fiyatı kullanılabilir hale getirdim ve eksik değerlerin nerede yoğunlaştığını inceledim.")
     explain("Fiyat alanında ne yaptım?","Fiyat alanındaki para birimi işaretlerini temizleyip sayısal formata dönüştürdüm. Fiyatı eksik veya sıfırdan küçük/eşit olan kayıtlar hedef değişken açısından anlamlı olmadığı için analiz dışında kaldı.")
     explain("Eksik değerleri neden hemen doldurmadım?","Eksik değerleri tüm veri seti üzerinden doldurmak test verisindeki bilgiyi eğitim sürecine taşıyabilir. Bu nedenle önce eksikliği inceledim; gerçek doldurma işlemini modelleme aşamasında yalnızca eğitim verisinden öğrenilen değerlerle yaptım.")
@@ -105,9 +128,8 @@ elif page=="3 · Veri Temizleme":
     with c2: metric_card("Yatak odası","≈ %16 eksik","bedrooms")
     with c3: metric_card("Banyo sayısı","≈ %12 eksik","bathrooms")
     st.markdown('<div class="result-box"><b>Kararım:</b><br/>Sayısal eksikleri eğitim verisinden öğrenilen <b>medyan</b> ile, kategorik eksikleri ise eğitim verisinden öğrenilen <b>en sık görülen değer</b> ile doldurdum. Bu kararı train/test ayrımından sonra uyguladım.</div>',unsafe_allow_html=True)
-
-elif page=="4 · Aykırı Değer Analizi":
-    hero("FAZ 1 · VERİYİ ANLAMA","Aykırı Değer Analizi","Bu bölüm projenin en kritik kararlarından biri. Amacım uç değerleri otomatik olarak silmek değil; hangi değerlerin gerçekten model için problem yaratabileceğini anlamaktı.")
+    tip("Eksik değerleri train/test ayrımından sonra doldurduğunu özellikle hatırla: amaç test bilgisinin eğitime sızmasını, yani data leakage'i önlemek.")
+    divider("AYKIRI DEĞER ANALİZİ")
     explain("Neden aykırı değerleri inceledim?","Fiyat dağılımında ve bazı sayısal özelliklerde çok yüksek değerler vardı. Bu gözlemler regresyon modelini güçlü biçimde etkileyebileceği için önce hangi değişkenlerde uç değerlerin yoğun olduğunu görmek istedim.")
     explain("Neden IQR?","IQR, verinin ortadaki %50'lik bölümüne dayanır ve uç gözlemleri sistematik biçimde belirlemek için kolay yorumlanan bir yöntemdir. Alt sınırı Q1−1,5×IQR; üst sınırı Q3+1,5×IQR olarak hesapladım.")
     fig=px.bar(outlier_df.sort_values("IQR Outlier (%)"),x="IQR Outlier (%)",y="Değişken",orientation="h",text="IQR Outlier (%)",color="IQR Outlier (%)",color_continuous_scale=[CREAM,SAGE_SOFT,SAGE_DARK],title="IQR kuralına göre aykırı gözlem oranları")
@@ -117,8 +139,9 @@ elif page=="4 · Aykırı Değer Analizi":
     explain("Bathrooms değişkeninde ne fark ettim?","Banyo sayısında Q1 ve Q3 değerlerinin ikisi de 1 olduğu için IQR=0 çıktı. Böyle olunca 1 banyodan farklı çok sayıda geçerli ilan otomatik olarak aykırı işaretleniyordu. Bu, mekanik IQR temizliğinin veri yapısını bozabileceğini gösterdi.")
     explain("Son kararı nasıl verdim?","IQR'ı uç değerleri tanımak için kullandım; ancak açıklayıcı değişkenlerde her outlier'ı silmedim. Hedef fiyat için eğitim verisinden öğrenilen IQR kapsamını kullandım. Açıklayıcı değişkenlerde yalnızca aşırı üst değerlerin etkisini eğitim verisinin %99 yüzdelik sınırıyla kontrol ettim.")
     st.markdown('<div class="insight"><b>Ana mesaj:</b> Outlier tespiti ile outlier müdahalesini birbirinden ayırdım. Önce “uç değer var mı?” dedim; sonra “bu değer gerçekten silinmeli mi?” sorusunu veri yapısına göre ayrıca değerlendirdim.</div>',unsafe_allow_html=True)
+    tip("En kritik örnek bathrooms: Q1=Q3=1 → IQR=0. Bu yüzden 'IQR aykırı dedi, sildim' yaklaşımını kullanmadın. Outlier tespiti ile müdahaleyi ayırdın.")
 
-elif page=="5 · Keşifsel Veri Analizi":
+elif page=="03 · Veri Analizi":
     hero("FAZ 1 · VERİYİ ANLAMA","Keşifsel Veri Analizi (EDA)","Aykırı değer yapısını gördükten sonra fiyat dağılımını, oda tiplerini ve sayısal değişkenlerin fiyatla ilişkisini ayrıntılı olarak inceledim.")
     st.markdown("### 1 · Fiyat dağılımı")
     st.image("images/price_distribution.png",use_container_width=True)
@@ -136,16 +159,16 @@ elif page=="5 · Keşifsel Veri Analizi":
     for col,(a,b,c) in zip([c1,c2,c3,c4,c5],vals):
         with col: metric_card(a,b,c)
     st.markdown('<div class="purple-note"><b>Korelasyon yorumu:</b><br/>Fiyatla en güçlü pozitif ilişki maksimum misafir kapasitesinde. Yatak ve yatak odası sayıları da benzer biçimde pozitif ilişki gösteriyor; yani ilan fiziksel olarak büyüdükçe fiyat genel olarak yükseliyor. Minimum konaklama süresi ise fiyatla orta düzeyde negatif ilişkili. Ancak korelasyon nedensellik göstermediği için bu ilişkileri daha sonra model sonuçları ve özellik önemleriyle birlikte değerlendirdim.</div>',unsafe_allow_html=True)
-
-elif page=="6 · İstatistiksel Analiz":
-    hero("FAZ 1 · VERİYİ ANLAMA","İstatistiksel Analiz","EDA'da gördüğüm ilişkileri yalnızca grafiklere bırakmak istemedim. Dağılım yapısına uygun testlerle sayısal ve kategorik ilişkileri ayrıca değerlendirdim.")
+    tip("Fiyat dağılımında ortalama medyandan belirgin yüksek → sağa çarpıklık. Korelasyonda kapasite ve fiziksel özellikler öne çıkıyor. Korelasyonun nedensellik olmadığını söyle.")
+    divider("İSTATİSTİKSEL ANALİZ")
     explain("Neden önce normal dağılımı kontrol ettim?","Kullanacağım istatistiksel yöntemin verinin dağılım yapısına uygun olmasını istedim. Fiyat değişkenini 5.000 gözlemlik örneklem üzerinde Shapiro-Wilk testiyle kontrol ettim ve normal dağılım varsayımı desteklenmedi.")
     explain("Neden Pearson yerine Spearman kullandım?","Fiyat dağılımı sağa çarpık ve uç değerler içeriyordu. Spearman sıralamalara dayandığı ve doğrusal ilişki varsayımına Pearson kadar bağımlı olmadığı için sayısal ilişkilerde Spearman'ı kullandım.")
     explain("Kategorik gruplarda ne kullandım?","Oda tipi ve mahalle grupları arasındaki fiyat farklarını Kruskal-Wallis testiyle değerlendirdim. Normal dağılım varsayımı desteklenmediği için parametrik olmayan bu yöntemi tercih ettim.")
     st.markdown('<div class="warning"><b>Yorum ilkesi:</b> Veri seti büyük olduğu için çok küçük farklar bile küçük p-değerleri üretebilir. Bu nedenle istatistiksel anlamlılığı tek başına yeterli görmedim; ilişki büyüklüğünü ve grafiksel bulguları da birlikte yorumladım.</div>',unsafe_allow_html=True)
     st.markdown('<div class="result-box"><b>FAZ 1 sonunda:</b><br/>Fiyat dağılımının sağa çarpık olduğunu, kapasite ve fiziksel büyüklük değişkenlerinin fiyatla güçlü pozitif ilişkiler gösterdiğini, oda tipi grupları arasında fiyat farkları bulunduğunu ve mekanik outlier silmenin veri yapısını bozabileceğini biliyorum. Artık model geliştirme aşamasına daha kontrollü geçebilirim.</div>',unsafe_allow_html=True)
+    tip("Spearman seçimini 'dağılım çarpık ve aykırı değerler var' diye bağla. İstatistiksel testleri EDA'da gördüğün ilişkileri desteklemek için kullandığını söyle.")
 
-elif page=="7 · Modelleme İçin Veri Hazırlama":
+elif page=="04 · Modelleme":
     hero("FAZ 2 · MODEL GELİŞTİRME","Train/Test Ayrımı ve Preprocessing","Veriyi anladıktan sonra model geliştirme aşamasına geçtim. Buradaki en önemli hedefim, test verisinin eğitim kararlarına sızmasını engellemekti.")
     c1,c2=st.columns(2)
     with c1: metric_card("Eğitim seti","%80","Modelin öğrendiği bölüm")
@@ -155,9 +178,8 @@ elif page=="7 · Modelleme İçin Veri Hazırlama":
     explain("Neden one-hot encoding?","Oda tipi ve mahalle gibi kategorik alanları modellerin kullanabileceği sayısal forma dönüştürmek için kullandım.")
     explain("Scaling neden her modelde aynı değil?","Ridge, Lasso ve ElasticNet gibi doğrusal regularization modelleri ölçeğe duyarlı olduğu için sayısal değişkenleri standardize ettim. Decision Tree ve Random Forest gibi ağaç tabanlı modeller eşiklere göre bölündüğü için scaling'e ihtiyaç duymadı.")
     st.markdown('<div class="insight"><b>Amaç:</b> Test setini model geliştirme kararları için kullanmamak ve final performans ölçümünü mümkün olduğunca tarafsız tutmak.</div>',unsafe_allow_html=True)
-
-elif page=="8 · Modeller ve Değerlendirme":
-    hero("FAZ 2 · MODEL GELİŞTİRME","Model Seçimi ve Değerlendirme Metrikleri","Tek bir algoritmanın sonucuna güvenmek yerine farklı model ailelerini aynı veri üzerinde karşılaştırdım. Böylece daha karmaşık modeller gerçekten test performansına katkı sağlıyor mu görebildim.")
+    tip("Modelleme akışını sırayla söyle: %80 train / %20 test → preprocessing yalnızca train'den öğrenildi → kategorikler one-hot encoding → aynı test setinde modeller karşılaştırıldı.")
+    divider("MODELLER VE METRİKLER")
     st.markdown('<span class="chip">Linear Regression</span><span class="chip">Ridge</span><span class="chip">Lasso</span><span class="chip">ElasticNet</span><span class="chip">Decision Tree</span><span class="chip">Gradient Boosting</span><span class="chip">Random Forest</span>',unsafe_allow_html=True)
     st.markdown("### Neden bu modeller?")
     explain("Linear Regression","Basit ve yorumlanabilir bir baseline oluşturdum. Daha karmaşık modeller gerçekten değer katıyor mu bunu görmek istedim.")
@@ -170,34 +192,35 @@ elif page=="8 · Modeller ve Değerlendirme":
     with c2: explain("MAE","Tahminlerin gerçek fiyatlardan ortalama mutlak olarak kaç euro saptığını gösteriyor; iş açısından kolay yorumlanıyor.")
     with c3: explain("RMSE","Büyük tahmin hatalarını daha güçlü cezalandırıyor; modelin ciddi hata üretme eğilimini görmemi sağlıyor.")
     st.markdown('<div class="purple-note"><b>Model seçim kuralım:</b> Tek başına en yüksek R²’ye bakmadım. Test R²’nin yüksek, MAE ve RMSE’nin düşük olmasını; aynı zamanda train-test farkının gereksiz biçimde büyümemesini istedim.</div>',unsafe_allow_html=True)
+    tip("R² açıklanan varyansı; MAE ortalama mutlak hatayı; RMSE büyük hataları daha fazla cezalandırır. Model seçerken tek bir metriğe bakmadığını vurgula.")
 
-elif page=="9 · Overfitting Analizi":
+elif page=="05 · Model İyileştirme":
     hero("FAZ 2 · MODEL GELİŞTİRME","Overfitting Analizi","Model geliştirme sırasında en önemli sorunlardan biri, eğitim verisinde çok başarılı görünen bir modelin yeni veride aynı başarıyı gösterememesiydi.")
     explain("Overfitting'i nasıl fark ettim?","İlk kontrolsüz Decision Tree eğitim verisinde R² değerini neredeyse 1,00 seviyesine taşıdı; fakat test performansı belirgin biçimde daha düşük kaldı. Bu yüzden yüksek train skorunu başarı olarak yorumlamadım.")
     explain("Decision Tree neden buna yatkın?","Ağaç çok derinleştiğinde eğitim verisini çok ayrıntılı bölerek gürültüyü bile öğrenebilir. Bu da train performansını yükseltirken genelleme gücünü düşürebilir.")
     explain("Ne yaptım?","max_depth, min_samples_split ve min_samples_leaf gibi karmaşıklık parametrelerini sınırlandırdım. Böylece modelin her küçük ayrıntıyı ayrı bir dala dönüştürmesini engellemeye çalıştım.")
     st.markdown('<div class="insight"><b>Hedefim train-test farkını sıfırlamak değildi.</b> Amaç, test başarısını korurken model varyansını kabul edilebilir düzeyde tutmaktı. Daha düşük train skoru, eğer test performansı daha dengeli hale geliyorsa başarısızlık değildir.</div>',unsafe_allow_html=True)
-
-elif page=="10 · Eğitim Verisi Miktarı":
-    hero("FAZ 2 · MODEL GELİŞTİRME","Eğitim Verisi Miktarının Etkisi","Overfitting'in yalnızca veri miktarından kaynaklanıp kaynaklanmadığını anlamak için test setini sabit tuttum ve aynı Random Forest yaklaşımını farklı büyüklükte eğitim verileriyle tekrar çalıştırdım.")
+    tip("Hikâye burada önemli: Decision Tree train'de neredeyse kusursuz → testte düşüş → overfitting. Yüksek train skoru tek başına iyi model demek değil.")
+    divider("EĞİTİM VERİSİ MİKTARI")
+    st.markdown("### Eğitim verisi büyüdükçe Train/Test performansı")
     fig=go.Figure()
     fig.add_trace(go.Scatter(x=size_df["Kullanılan oran"],y=size_df["Train R²"],mode="lines+markers",name="Train R²",line=dict(color=SAGE_DARK,width=4),marker=dict(size=10)))
     fig.add_trace(go.Scatter(x=size_df["Kullanılan oran"],y=size_df["Test R²"],mode="lines+markers",name="Test R²",line=dict(color=LILAC_DARK,width=4),marker=dict(size=10)))
-    fig.update_layout(title="Eğitim verisi büyüdükçe Train/Test performansı",xaxis_title="Kullanılan eğitim verisi (%)",yaxis_title="R²",legend=dict(orientation="h",y=1.13))
+    fig.update_layout(title=None,xaxis_title="Kullanılan eğitim verisi (%)",yaxis_title="R²",legend=dict(orientation="h",y=1.08))
     st.plotly_chart(transparent(fig,500),use_container_width=True)
     st.dataframe(size_df[["Eğitim verisi","Train R²","Test R²","Train-Test Farkı"]].style.format({"Train R²":"{:.4f}","Test R²":"{:.4f}","Train-Test Farkı":"{:.4f}"}),use_container_width=True,hide_index=True)
     st.markdown('<div class="insight"><b>Grafik yorumu:</b><br/>Eğitim verisinin yalnızca %10’unu kullandığımda Test R² yaklaşık 0,584’tü. Veri miktarını artırdıkça Test R² düzenli biçimde yükseldi ve %100 eğitim verisinde yaklaşık 0,631’e ulaştı. Train R² ise büyük ölçüde benzer seviyede kaldı. Bu nedenle daha az veri kullanmanın overfitting’i çözmediği; aksine daha fazla gözlemin genelleme performansına katkı sağladığı sonucuna vardım.</div>',unsafe_allow_html=True)
-
-elif page=="11 · Random Forest Optimizasyonu":
-    hero("FAZ 2 · MODEL GELİŞTİRME","Random Forest Optimizasyonu","Random Forest en güçlü adaylardan biri olduktan sonra hiperparametrelerini test setine bakmadan, çapraz doğrulama üzerinden daha kontrollü biçimde seçtim.")
+    tip("Daha az veri overfitting'i çözmedi. Eğitim verisi arttıkça Test R² yükseldi; bu yüzden çözümü veri azaltmakta değil model karmaşıklığını ve hiperparametreleri kontrol etmekte aradın.")
+    divider("RANDOM FOREST OPTİMİZASYONU")
     explain("Neden GridSearchCV?","Tek bir hiperparametre kombinasyonunu rastgele seçmek yerine belirlediğim seçenekleri 5-fold cross-validation ile karşılaştırdım. Böylece kararımı tek bir train/test bölünmesine daha az bağımlı hale getirdim.")
     explain("Neden 10.000 eğitim gözlemi?","Tüm eğitim verisinde geniş 5-fold arama hesaplama açısından daha maliyetliydi. Bu nedenle yalnızca eğitim setinden sabit bir 10.000 gözlemlik alt küme seçtim. Test verisini hiperparametre aramasına dahil etmedim.")
     explain("Sonra ne yaptım?","Seçtiğim parametrelerle final Random Forest modelini yeniden tüm eğitim verisi üzerinde eğittim. Böylece tuning yönetilebilir kaldı fakat final model mevcut eğitim verisinin tamamından yararlandı.")
     st.markdown("### Final Random Forest parametreleri")
     st.dataframe(rf_params,use_container_width=True,hide_index=True)
     st.markdown('<div class="purple-note"><b>Seçim ilkesi:</b> Hiperparametrelerde yalnızca en yüksek train skorunu değil, cross-validation performansını ve train-validation farkını da dikkate aldım. Amaç daha karmaşık değil, daha iyi genelleyen modeli seçmekti.</div>',unsafe_allow_html=True)
+    tip("5-fold CV + GridSearchCV kullandın. Test setini tuning'e sokmadın. Seçilen parametrelerle final modeli tüm eğitim verisinde yeniden eğittin.")
 
-elif page=="12 · Final Model ve Bulgular":
+elif page=="06 · Bulgular":
     hero("FAZ 2 · MODEL GELİŞTİRME","Final Model ve Temel Bulgular","Tüm modelleri aynı test çerçevesinde karşılaştırdıktan sonra Random Forest en dengeli genel sonucu verdi.")
     st.markdown("### Model karşılaştırması")
     st.image("images/model_comparison.png",use_container_width=True)
@@ -213,8 +236,9 @@ elif page=="12 · Final Model ve Bulgular":
     st.image("images/feature_importance.png",use_container_width=True)
     st.markdown('<div class="insight"><b>Özellik önemleri yorumu:</b><br/>Maksimum misafir kapasitesi, minimum konaklama süresi ve yatak odası sayısı final modelde en önemli değişkenler arasında. Enlem ve boylam gibi konum değişkenleri de üst sıralarda. Minimum konaklama süresinin basit korelasyonda negatif ilişki göstermesine rağmen model içinde yüksek önem alması, ilişkinin yalnızca doğrusal olmadığını ve diğer değişkenlerle etkileşim içinde değerlendirildiğini gösteriyor.</div>',unsafe_allow_html=True)
     st.markdown('<div class="warning"><b>Dikkat:</b> Random Forest feature importance nedensellik kanıtlamaz. Burada gördüğüm şey, modelin tahmin yaparken hangi değişkenlerden daha fazla yararlandığıdır.</div>',unsafe_allow_html=True)
+    tip("Ana sonuç: Random Forest en iyi Test R²=0,6324; MAE=58,06 €; RMSE=81,71 €. Doğrusal modeller ~0,55'te kalırken ağaç tabanlı modeller daha iyi sonuç verdi.")
 
-elif page=="13 · Sonuç ve Hipotezler":
+elif page=="07 · Sonuç":
     hero("FAZ 3 · SONUÇ","Sonuç ve Hipotezlerin Değerlendirilmesi","Son adımda başlangıçta kurduğum hipotezlere geri dönüp elde ettiğim bulguların bu beklentileri ne ölçüde desteklediğini değerlendiriyorum.")
     st.markdown('''<div class="hypothesis"><div class="h-title">Hipotez 1 · Kapasite ve fiziksel özellikler fiyatla pozitif ilişkilidir.</div><div class="supported">✓ Desteklendi</div><br/>Maksimum misafir kapasitesi fiyatla yaklaşık ρ=0,60; yatak sayısı ρ=0,54; yatak odası ρ=0,53 ve banyo sayısı ρ=0,43 pozitif Spearman ilişkisi gösterdi. İlan büyüklüğü ve kapasitesinin fiyat yapısında önemli olduğu beklentim desteklendi.</div><div class="hypothesis"><div class="h-title">Hipotez 2 · Ağaç tabanlı modeller doğrusal modellerden daha başarılı olacaktır.</div><div class="supported">✓ Desteklendi</div><br/>Doğrusal modeller Test R²≈0,55 seviyesinde kalırken Gradient Boosting 0,6179 ve Random Forest 0,6324 Test R² elde etti. Bu sonuç doğrusal olmayan ilişkilerin ve değişken etkileşimlerinin önemini destekliyor.</div><div class="hypothesis"><div class="h-title">Hipotez 3 · Model karmaşıklığı kontrol edildiğinde overfitting azaltılabilir.</div><div class="supported">✓ Büyük ölçüde desteklendi</div><br/>İlk kontrolsüz Decision Tree'deki büyük train-test farkı, karmaşıklık sınırlandırıldığında ve Random Forest çapraz doğrulama ile ayarlandığında daha dengeli hale geldi. Final modelde Train R²=0,7562 ve Test R²=0,6324 arasında hâlâ fark var; yani overfitting tamamen ortadan kalkmadı, fakat belirgin biçimde azaltıldı.</div>''',unsafe_allow_html=True)
     st.markdown("### Bu projeden ne elde ettim?")
@@ -228,3 +252,4 @@ elif page=="13 · Sonuç ve Hipotezler":
         explain("Farklı model aileleri","XGBoost, CatBoost ve LightGBM gibi boosting modelleri Random Forest ile karşılaştırılabilir.")
         explain("Daha güçlü doğrulama","Nested cross-validation ve farklı veri kesitleri üzerinde dış doğrulama ile genelleme performansı daha kapsamlı test edilebilir.")
     st.markdown('<div class="purple-note"><b>Sunumu kapatırken:</b> “Sonuç olarak, bu projede hedefim yalnızca yüksek bir skor üretmek değil; veri yapısını anlayarak, verdiğim preprocessing ve modelleme kararlarını gerekçelendirebildiğim ve yeni veriye daha sağlıklı genellenebilen bir fiyat tahmin süreci oluşturmaktı.”</div>',unsafe_allow_html=True)
+    tip("Kapanışta başlangıç hipotezlerine geri dön: kapasite/fiziksel özellikler desteklendi; ağaç tabanlı modeller daha başarılı oldu; overfitting tamamen yok olmadı ama belirgin biçimde azaltıldı.")
