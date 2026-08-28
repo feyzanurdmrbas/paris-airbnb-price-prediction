@@ -93,6 +93,33 @@ def divider(label=None):
         st.markdown(f'<div class="section-kicker">{label}</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 
+
+# =========================================================
+# FINAL MODEL İLE CANLI TAHMİN
+# =========================================================
+MODEL_BUNDLE_PATH = Path("model_bundle.joblib")
+
+@st.cache_resource
+def load_prediction_bundle():
+    if MODEL_BUNDLE_PATH.exists():
+        return joblib.load(MODEL_BUNDLE_PATH)
+    return None
+
+def predict_nightly_price(bundle, row):
+    preprocessor = bundle["preprocessor"]
+    model = bundle["model"]
+    model_cols = bundle["model_cols"]
+    cap_bounds = bundle.get("cap_bounds", {})
+
+    x = row[model_cols].copy()
+    for col, upper in cap_bounds.items():
+        if col in x.columns:
+            x[col] = x[col].clip(upper=float(upper))
+
+    x_proc = preprocessor.transform(x)
+    return max(0.0, float(model.predict(x_proc)[0]))
+
+
 if page=="01 · Proje & Veri":
     hero("FAZ 1 · VERİYİ ANLAMA","Paris Airbnb İlanlarında Gecelik Fiyat Tahmini","Bu projede amacım yalnızca en yüksek model skorunu bulmak değildi. Paris Airbnb fiyatlarının hangi özelliklerle ilişkili olduğunu anlamak, aykırı değerleri kontrollü biçimde ele almak ve modelin eğitim verisini ezberlemesini önleyecek savunulabilir bir süreç kurmak istedim.")
     c1,c2,c3=st.columns(3)
